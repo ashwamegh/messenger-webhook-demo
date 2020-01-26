@@ -1,10 +1,16 @@
 'use strict';
+const request = require('request');
+
 
 // Imports dependencies and set up http server
 const
   express = require('express'),
   bodyParser = require('body-parser'),
   app = express().use(bodyParser.json()); // creates express http server
+  const PAGE_ACCESS_TOKENS = {
+    '813586928715411': 'EAAnV1gCU7UkBAPD91MmM072nXSOH2wanZAyjXVYcUp0OTbsP4JowMYWSKOAKRkZA14MEdXc5H2dzHLq19BCMFqJ4bkWG88fDhpfteZBeZCFyuZAyqCJx1SfjZAU9oxZBfjg7cSZC3avR9rX4lhh6e317cQXzv0xfNoK5wFtqC1CtXxpjWsbnXC5TBZCxrL3suYDsZD',
+    '112980233584055': 'EAAnV1gCU7UkBACtOQ2bsZCEzqUcl2pcoScGwbySRUWRGYXglDnqfSzhY0GBj5I6WZBGTetO9BvPxJybd6EQecfcVD2OOaEXnLib55IkBR4k2pzUQQQbn8wW8eDgRvl6advNBfYatAn7l4zckU4BGIrxJt0NH4ljpveJT5rA2AlO6l4aUttf0GxssRkO9EZD'
+  }
 
 // Sets server port and logs message on success
 app.listen(process.env.PORT || 1337, () => console.log('webhook is listening'));
@@ -62,4 +68,38 @@ app.get('/webhook', (req, res) => {
       res.sendStatus(403);      
     }
   }
+});
+
+app.post('/message', (req, response) => {  
+ 
+  let body = req.body;
+  const { senderId, message, recipientId } = body
+  const access_token = PAGE_ACCESS_TOKENS[senderId];
+
+   // Construct the message body
+   let request_body = {
+    "recipient": {
+      "id": recipientId
+    },
+    "message": {
+      "text": message
+    }
+  }
+
+  // Send the HTTP request to the Messenger Platform
+  request({
+    "uri": "https://graph.facebook.com/v2.6/me/messages",
+    "qs": { "access_token": access_token },
+    "method": "POST",
+    "json": request_body
+  }, (err, res, body) => {
+    if (!err) {
+      console.log('message sent!')
+      response.send(200);
+    } else {
+      console.error("Unable to send message:" + err);
+      response.send(403);
+    }
+  }); 
+
 });
